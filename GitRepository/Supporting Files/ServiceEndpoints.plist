@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>OAUTH_CLIENT_ID</key>
+	<string>your_github_client_id</string>
+	<key>OAUTH_SECRET</key>
+	<string>your_github_client_secret</string>
+	<key>OAUTH_SCOPE</key>
+	<string></string>
+	<key>OAUTH_TOKEN_URI</key>
+	<string>https://github.com/login/oauth/access_token</string>
+	<key>OATUH_REDIRECT_URI</key>
+	<string>githubRepositories://</string>
+	<key>GITHUB_AUTHORIZE_URL</key>
+	<string>https://github.com/login/oauth/authorize</string>
+	<key>GITHUB_BASE_URL_USERS</key>
+	<string>https://api.github.com/users/</string>
+	<key>GITHUB_BASE_URL_REPOS</key>
+	<string>https://api.github.com/repos/</string>
+</dict>
+</plist>
