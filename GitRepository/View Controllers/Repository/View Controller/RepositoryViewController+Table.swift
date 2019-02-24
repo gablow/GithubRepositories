@@ -37,7 +37,4 @@ extension RepositoryViewController {
         return viewModel.tableView(tableView, willDisplay: cell, forRowAt: indexPath)
     }
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        return viewModel.tableView(tableView, didSelectRowAt: indexPath)
-    }
 }

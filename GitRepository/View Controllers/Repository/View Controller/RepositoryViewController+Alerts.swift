@@ -14,7 +14,7 @@ extension RepositoryViewController {
     func showAlert(title: String, message: String) {
         
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        let dismiss = UIAlertAction(title: "Ok",
+        let dismiss = UIAlertAction(title: LocalizedString.okButton,
                                     style: .default,
                                     handler: nil)
         

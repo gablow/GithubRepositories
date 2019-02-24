@@ -27,6 +27,7 @@ struct Repositories {
      - Parameter repositories: Datasource repositories
      - Parameter pageNumber: Page number of request
      - Parameter repositoriesNumber: Total number of repositories
+     - Parameter canLoadMore: Boolean to check if there are others repotiries to fetch
 
      - Returns: An instance of Repositories
      */

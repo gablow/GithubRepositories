@@ -10,7 +10,7 @@ import Foundation
 
 extension RepositoryViewModel {
     
-    func networkRequest(endpoint: NSURL, parser: ParserProtocol, completion: @escaping (_ parsedModel: Any?, _ linkHeader: String?, _ error: NSError?) -> Void) {        
+    func networkRequest(endpoint: NSURL, parser: ParserProtocol, completion: @escaping (_ parsedModel: Any?, _ linkHeader: String?, _ statusCode: Int?, _ error: NSError?) -> Void) {
         networkService.makeGETRequestToEndpoint(endpoint: endpoint, withParser: parser, withCompletion: completion)
     }
     

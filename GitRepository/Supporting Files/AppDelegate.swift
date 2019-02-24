@@ -17,16 +17,5 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         return true
     }
-
-    func application(_ application: UIApplication, open url: URL, sourceApplication: String?, annotation: Any) -> Bool {
-        
-        if ("githubrepositories" == url.scheme) {
-                NotificationCenter.default.post(name: NSNotification.Name(rawValue: kSafariViewControllerCloseNotification), object: url)
-                return true
-        }
-        
-        return false
-    }
     
 }
-

@@ -10,12 +10,12 @@ import Foundation
 import UIKit
 
 protocol RepositoryViewModelDelegate: class {
-    func onUpdateUserInfo(userName: String)
+    func onUpdateUserInfo(userName: String, continueWithFetch: Bool)
     func onUpdateErrorUserInfo(error: NSError)
     func onUpdateRepository()
     func onUpdateErrorRepository(error: NSError)
     func onUpdateCell(indexPath: IndexPath)
-    func onUpdateErrorCell(error: NSError)
+    func onUpdateErrorCell(error: NSError, indexPath: IndexPath)
 }
 
 class RepositoryViewModel {
@@ -24,7 +24,10 @@ class RepositoryViewModel {
     var repositoriesDataSource: Repositories?
     var networkService = NetworkService()
     var user: User?
+    // Bool value to avoid duplicate requests on the last cell viewWillAppear
     var refreshing = false
+    
+    // MARK: Fetch user
     
     func fetchUserInfo(user: String) {
 
@@ -33,26 +36,30 @@ class RepositoryViewModel {
 
         self.refreshing = true
         
-        self.networkRequest(endpoint: endpoint!, parser: parser) { (parsedModel, linkHeader, error) in
-            // TODO: add NSError extensions
+        self.networkRequest(endpoint: endpoint!, parser: parser) { (parsedModel, linkHeader, statusCode, error) in
             if let _ = error {
                 print(error!)
             }
             
             guard let parsedUser = parsedModel as? User else {
-                self.delegate?.onUpdateErrorUserInfo(error: error!)
+                let errorToReturn: Error = GitError.getNetworkErrorType(statusCode: statusCode!, callerErrorType: GitError.userNotFoundError)
+                self.delegate?.onUpdateErrorUserInfo(error: errorToReturn as NSError)
                 return
             }
             
             self.user = parsedUser
             self.repositoriesDataSource = Repositories(repositoriesNumber: self.user!.reposNum)
             
-            self.delegate?.onUpdateUserInfo(userName: self.user?.name ?? "")
+            let reposIsNotEmpty = self.repositoriesDataSource!.repositoriesNumber.intValue > 0
+            
+            self.delegate?.onUpdateUserInfo(userName: self.user?.name ?? "", continueWithFetch: reposIsNotEmpty)
             
             self.refreshing = false
         }
         
     }
+    
+    // MARK: Fetch repositories
     
     func fetchRepositories() {
 
@@ -65,14 +72,14 @@ class RepositoryViewModel {
         let endpoint = NSURL(string: Services.valueForServiceKey(key: .GitHubUsersUrl)! + user!.login + "/repos" + "?page=" + pageToFetch)
         let parser = RepositoriesListParser()
         
-        self.networkRequest(endpoint: endpoint!, parser: parser) { (parsedModel, linkHeader, error) in
+        self.networkRequest(endpoint: endpoint!, parser: parser) { (parsedModel, linkHeader, statusCode, error) in
             if let _ = error {
                 print(error!)
-                return
             }
             
             guard let repository = parsedModel as? [Repository] else {
-                print(error!)
+                let errorToReturn: Error = GitError.getNetworkErrorType(statusCode: statusCode!, callerErrorType: GitError.genericRepositoriesError)
+                self.delegate?.onUpdateErrorRepository(error: errorToReturn as NSError)
                 return
             }
             
@@ -84,6 +91,8 @@ class RepositoryViewModel {
         }
         
     }
+    
+    // MARK: Fetch branches and commits
 
     func fetchMoreInfo(index: IndexPath) {
         self.fetchBranches(index: index)
@@ -98,15 +107,14 @@ class RepositoryViewModel {
         
         let endpoint = NSURL(string: Services.valueForServiceKey(key: .GitHubReposUrl)! + user!.login + "/" + currentRepository.name + "/branches")
 
-        self.networkRequest(endpoint: endpoint!, parser: parser) { (parsedModel, linkHeader, error) in
+        self.networkRequest(endpoint: endpoint!, parser: parser) { (parsedModel, linkHeader, statusCode, error) in
             if let _ = error {
                 print(error!)
-                return
             }
             
             guard let parsedArray = parsedModel as? [String] else {
-                print(error!)
-                self.delegate?.onUpdateErrorCell(error: error!)
+                let errorToReturn: Error = GitError.getNetworkErrorType(statusCode: statusCode!, callerErrorType: GitError.moreInfoError)
+                self.delegate?.onUpdateErrorCell(error: errorToReturn as NSError, indexPath: index)
                 return
             }
 
@@ -127,15 +135,14 @@ class RepositoryViewModel {
         
         let endpoint = NSURL(string: Services.valueForServiceKey(key: .GitHubReposUrl)! + user!.login + "/" + currentRepository.name + "/commits")
 
-        self.networkRequest(endpoint: endpoint!, parser: parser) { (parsedModel, linkHeader, error) in
+        self.networkRequest(endpoint: endpoint!, parser: parser) { (parsedModel, linkHeader, statusCode, error) in
             if let _ = error {
                 print(error!)
-                return
             }
             
             guard let parsedArray = parsedModel as? [String] else {
-                print(error!)
-                self.delegate?.onUpdateErrorCell(error: error!)
+                let errorToReturn: Error = GitError.getNetworkErrorType(statusCode: statusCode!, callerErrorType: GitError.moreInfoError)
+                self.delegate?.onUpdateErrorCell(error: errorToReturn as NSError, indexPath: index)
                 return
             }
             
@@ -162,14 +169,14 @@ class RepositoryViewModel {
         let parser = MoreInfoParser()
         let endPointUrl = NSURL(string: endpoint + lastPage)
         
-        self.networkRequest(endpoint: endPointUrl!, parser: parser) { (parsedModel, linkHeader, error) in
+        self.networkRequest(endpoint: endPointUrl!, parser: parser) { (parsedModel, linkHeader, statusCode, error) in
             if let _ = error {
                 print(error!)
-                return
             }
             
             guard let parsedArray = parsedModel as? [String] else {
-                print(error!)
+                let errorToReturn: Error = GitError.getNetworkErrorType(statusCode: statusCode!, callerErrorType: GitError.moreInfoError)
+                self.delegate?.onUpdateErrorCell(error: errorToReturn as NSError, indexPath: index)
                 return
             }
         
@@ -184,7 +191,7 @@ class RepositoryViewModel {
         }
     }
     
-    // Helper
+    // MARK: Helper
     
     func parseLinkHeader(header: String?) -> (String) {
         guard let links = header?.components(separatedBy: ",") else {

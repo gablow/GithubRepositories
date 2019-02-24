@@ -71,8 +71,4 @@ extension RepositoryViewModel {
         }
     }
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
-    }
-    
 }

@@ -10,10 +10,11 @@ import XCTest
 @testable import GitRepository
 
 class RepositoryTableViewTests: XCTestCase, RepositoryViewModelDelegate, LoadMoreInfoButtonDelegate {
-   
+    
     var viewController: RepositoryViewController!
     var isIdentifier: Bool!
     private var cellExpectation: XCTestExpectation!
+    private var canLoadMoreExpectation: XCTestExpectation!
     private var textExpectation: XCTestExpectation!
 
     override func setUp() {
@@ -39,16 +40,20 @@ class RepositoryTableViewTests: XCTestCase, RepositoryViewModelDelegate, LoadMor
     
     func testTableViewCell() {
         self.cellExpectation = expectation(description: "Table identifier test")
+        self.canLoadMoreExpectation = expectation(description: "Can load more test")
         self.viewController.viewModel.delegate = self
         self.viewController.viewModel.delegate = self
         self.viewController.fetchUserInfo(userName: "Facebook")
         wait(for: [cellExpectation], timeout: 100)
+        wait(for: [canLoadMoreExpectation], timeout: 100)
     }
     
     // Delegates
     
-    func onUpdateUserInfo(userName: String) {
-        self.viewController.viewModel.fetchRepositories()
+    func onUpdateUserInfo(userName: String, continueWithFetch: Bool) {
+        if (continueWithFetch) {
+            self.viewController.viewModel.fetchRepositories()
+        }
     }
     
     func onUpdateErrorUserInfo(error: NSError) {
@@ -63,6 +68,7 @@ class RepositoryTableViewTests: XCTestCase, RepositoryViewModelDelegate, LoadMor
 
         let actualReuseIdentifer = cell?.reuseIdentifier
         let expectedReuseIdentifier = "RepositoryCellIdentifier"
+        let expectedCanLoadMore = true
         
         // Has the expected title (first and last cell test)
         let firstCell = viewController.tableView(viewController.tableView, cellForRowAt: IndexPath(row: 0, section: 0)) as? RepositoryCellView
@@ -73,6 +79,13 @@ class RepositoryTableViewTests: XCTestCase, RepositoryViewModelDelegate, LoadMor
         let isSameTextFirstCell = firstCell?.titleLabel.text == "360-Capture-SDK"
         let isSameTextLastCell = lastCell?.titleLabel.text == "facebook-instant-articles-sdk-php"
 
+        if (viewController.viewModel.repositoriesDataSource!.canLoadMore == expectedCanLoadMore) {
+            canLoadMoreExpectation.fulfill()
+        }
+        else {
+            XCTFail("Error in can load more test")
+        }
+        
         if (isSameIdentifier && isSameTextFirstCell && isSameTextLastCell) {
             cell?.moreInfoButton.sendActions(for: .touchUpInside)
         }
@@ -89,7 +102,7 @@ class RepositoryTableViewTests: XCTestCase, RepositoryViewModelDelegate, LoadMor
         
     }
     
-    func onUpdateErrorCell(error: NSError) {
+    func onUpdateErrorCell(error: NSError, indexPath: IndexPath) {
         
     }
     

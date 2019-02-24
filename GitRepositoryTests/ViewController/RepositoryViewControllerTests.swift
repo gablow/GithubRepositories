@@ -16,6 +16,7 @@ class RepositoryViewControllerTests: XCTestCase, RepositoryViewModelDelegate {
     private var nameExpectation: XCTestExpectation!
     private var nameErrorExpectation: XCTestExpectation!
     private var repoExpectation: XCTestExpectation!
+    private var repoEmptyExpectation: XCTestExpectation!
     private var moreinfoExpectation: XCTestExpectation!
 
     override func setUp() {
@@ -32,7 +33,7 @@ class RepositoryViewControllerTests: XCTestCase, RepositoryViewModelDelegate {
     func testSearchBar() {
         self.viewController.loadSearchBar()
         var placeholder: String?
-        let expectedPlaceholder = "Search GitHub user repositories..."
+        let expectedPlaceholder = "search_user".localized
 
         if #available(iOS 11.0, *) {
             placeholder = self.viewController.navigationItem.searchController!.searchBar.placeholder
@@ -46,7 +47,7 @@ class RepositoryViewControllerTests: XCTestCase, RepositoryViewModelDelegate {
     func testNavigationBarStyle() {
         let navigation = UINavigationController()
         navigation.viewControllers = [self.viewController]
-        self.viewController.setNavigationBarStyle()
+        self.viewController.loadNavigationBar()
         let color = self.viewController.navigationController?.navigationBar.tintColor
         let expectedColor = UIColor.NavigationBarColor()
         
@@ -83,6 +84,12 @@ class RepositoryViewControllerTests: XCTestCase, RepositoryViewModelDelegate {
         wait(for: [expectation], timeout: 1.5)
     }
     
+    func testConnectivity() {
+        var connected: Bool
+        connected = Connectivity.isNotConnectedToInternet
+        XCTAssertNotNil(connected)
+    }
+    
     // MARK: Fetch user and repositories
     
     func testFetchUserInfo() {
@@ -112,13 +119,29 @@ class RepositoryViewControllerTests: XCTestCase, RepositoryViewModelDelegate {
         wait(for: [nameErrorExpectation], timeout: 100)
     }
     
+    func testFetchUserWithNoRepositories() {
+        let user = "facebookkkk"
+        self.repoEmptyExpectation = expectation(description: "Fetch user with no repositories")
+        
+        self.viewController.viewModel.delegate = self
+        self.viewController.fetchUserInfo(userName: user)
+        
+        wait(for: [repoEmptyExpectation], timeout: 100)
+    }
+    
     // MARK: Delegates
     
-    func onUpdateUserInfo(userName: String) {
+    func onUpdateUserInfo(userName: String, continueWithFetch: Bool) {
         print("onUpdateUserInfo")
         self.nameReturned = userName
-        nameExpectation.fulfill()
-        self.viewController.viewModel.fetchRepositories()
+        
+        if (continueWithFetch) {
+            nameExpectation.fulfill()
+            self.viewController.viewModel.fetchRepositories()
+        }
+        else {
+            repoEmptyExpectation.fulfill()
+        }
     }
     
     func onUpdateErrorUserInfo(error: NSError) {
@@ -141,7 +164,7 @@ class RepositoryViewControllerTests: XCTestCase, RepositoryViewModelDelegate {
         moreinfoExpectation.fulfill()
     }
     
-    func onUpdateErrorCell(error: NSError) {
+    func onUpdateErrorCell(error: NSError, indexPath: IndexPath) {
         XCTFail("Failed to update cell")
     }
     

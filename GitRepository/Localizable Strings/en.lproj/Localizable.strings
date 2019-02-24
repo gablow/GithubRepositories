@@ -1,0 +1,27 @@
+/* 
+  Localizable.strings
+  GitRepository
+
+  Created by Lorenzo Colaizzi on 22/02/2019.
+  Copyright © 2019 Lorenzo Colaizzi. All rights reserved.
+*/
+
+"alert_title" = "Alert";
+
+"error_user_not_exists" = "It seems that the user not exists";
+
+"error_fetch_repository" = "Generic error with repository";
+
+"error_fetch_more_info" = "Error with the info update of the selected repository.";
+
+"error_rate_limits" = "Limit rates excedeed. Try later or login with a GitHub user.";
+
+"error_disconnected" = "It seems that you are offline. Please check your internet connection.";
+
+"error_generic" = "Generic error with the request.";
+
+"ok" = "Ok";
+
+"search_user" = "Search GitHub user repositories...";
+
+"repositories_empty" = "The user has no repositories.";

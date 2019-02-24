@@ -49,18 +49,25 @@ class RepositoryViewController: UIViewController, UISearchBarDelegate, UITableVi
     func setupViews() {
         loadActivityIndicator()
         loadSearchBar()
-        setNavigationBarStyle()
+        loadNavigationBar()
     }
     
     // MARK: RepositoryViewModelDelegates
     
-    func onUpdateUserInfo(userName: String) {
-        self.startToFetchRepositories()
+    func onUpdateUserInfo(userName: String, continueWithFetch: Bool) {
         self.navigationItem.title = userName
+
+        if (continueWithFetch) {
+            viewModel.fetchRepositories()
+        }
+        else {
+            self.showAlert(title: LocalizedString.alertTitle, message: LocalizedString.emptyRepositories)
+            self.hideSpinner()
+        }
     }
     
     func onUpdateErrorUserInfo(error: NSError) {
-        self.showAlert(title:"Alert", message:"The user may not exist")
+        self.showAlert(title: LocalizedString.alertTitle, message: error.localizedDescription)
         self.hideSpinner()
         self.navigationItem.title = ""
     }
@@ -72,7 +79,7 @@ class RepositoryViewController: UIViewController, UISearchBarDelegate, UITableVi
     }
     
     func onUpdateErrorRepository(error: NSError) {
-        self.showAlert(title:"Alert", message:"Generic error with repository")
+        self.showAlert(title:LocalizedString.alertTitle, message:error.localizedDescription)
         self.hideSpinner()
     }
     
@@ -80,8 +87,9 @@ class RepositoryViewController: UIViewController, UISearchBarDelegate, UITableVi
         self.tableView.reloadRows(at: [indexPath], with: .fade)
     }
     
-    func onUpdateErrorCell(error: NSError) {
-        self.showAlert(title:"Alert", message:"Generic error with the request")
+    func onUpdateErrorCell(error: NSError, indexPath: IndexPath) {
+        self.showAlert(title:LocalizedString.alertTitle, message:error.localizedDescription)
+        self.tableView.reloadRows(at: [indexPath], with: UITableView.RowAnimation.fade)
     }
     
     // MARK: More Info Button delegate
@@ -96,7 +104,7 @@ class RepositoryViewController: UIViewController, UISearchBarDelegate, UITableVi
         showSpinner()
         
         if Connectivity.isNotConnectedToInternet {
-            self.showAlert(title: "Alert", message: "It seems that you are offline. Please check your internet connection.")
+            self.showAlert(title: LocalizedString.alertTitle, message: LocalizedString.errorDisconnected)
             return
         }
         
@@ -111,10 +119,6 @@ class RepositoryViewController: UIViewController, UISearchBarDelegate, UITableVi
     
     func fetchUserInfo(userName: String) {
         viewModel.fetchUserInfo(user: userName)
-    }
-    
-    func startToFetchRepositories() {
-        viewModel.fetchRepositories()
     }
     
     // MARK: Helper

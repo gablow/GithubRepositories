@@ -15,6 +15,8 @@ class RepositoriesParserTest: XCTestCase {
         let parser = RepositoriesListParser()
         var parsedArray = Array<Any?>()
 
+        // WARNING: change with updated repositories data
+        
         let expectedFirstRepository = Repository(
             name: "360-Capture-SDK",
             html_url: "https://github.com/facebook/360-Capture-SDK",

@@ -12,11 +12,13 @@ import Alamofire
 class NetworkService: NSObject {
 
     // MARK: - Alamofire
-    internal func makeGETRequestToEndpoint(endpoint: NSURL, withParser parser: ParserProtocol, withCompletion completion:@escaping (_ parsedModel: Any?, _ header: String?, _ error: NSError?) -> Void) {
+    internal func makeGETRequestToEndpoint(endpoint: NSURL, withParser parser: ParserProtocol, withCompletion completion:@escaping (_ parsedModel: Any?, _ header: String?, _ code: Int, _ error: NSError?) -> Void) {
     
         let endpointConvertible = URLRequest(url:endpoint as URL)
         
         Alamofire.request(endpointConvertible).validate().responseJSON { response in
+            let statusCode = response.response?.statusCode
+
             switch response.result {
             case .success:
                 print("🎉 Recieved response from \(endpoint.absoluteString!)")
@@ -25,7 +27,7 @@ class NetworkService: NSObject {
                     DispatchQueue.global(qos: .background).async {
                         let parsedModel = parser.parse(rawData: value)
                         DispatchQueue.main.async(execute: {
-                            completion(parsedModel, "", nil)
+                            completion(parsedModel, "", statusCode!, nil)
                         })
                     }
                 }
@@ -40,14 +42,15 @@ class NetworkService: NSObject {
                         }
                     }
                     DispatchQueue.main.async(execute: {
-                        completion(parsedArray, linkHeader, nil)
+                        completion(parsedArray, linkHeader, statusCode!, nil)
                     })
                 }
                 
             case .failure(let error):
                 print("⚠️ Failed to make request to \(endpoint)\nError: \(error.localizedDescription)")
+                
                 DispatchQueue.main.async(execute: {
-                    completion(nil, "", error as NSError)
+                    completion(nil, "", statusCode!, error as NSError)
                 })
             }
         }
